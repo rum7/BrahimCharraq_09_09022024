@@ -19,40 +19,34 @@ export default class NewBill {
   handleChangeFile = e => {
     e.preventDefault()
     const file = this.document.querySelector(`input[data-testid="file"]`).files[0]
-    const filePath = e.target.value.split(/\\/g)
-    const fileName = filePath[filePath.length-1]
-    const extensionMatch = fileName.match(/\.[0-9a-z]+$/i)
-    const extension = extensionMatch[0].toLowerCase().substring(1)
-    const allowedExtensions = ['jpg', 'jpeg', 'png']
-
-    if (!allowedExtensions.includes(extension)) {
-      document.querySelector(`input[data-testid="file"]`).value = ''
-      alert(`Veuillez sélectionner un fichier image au format jpg, jpeg ou png`)
-      return
-    }
-
+    const fileName = file.name
+    const extensionRegex = new RegExp(/\.[jpg|jpeg|png]+$/i)
+    
     const formData = new FormData()
     const email = JSON.parse(localStorage.getItem("user")).email
-    console.log('file: ', file)
     formData.append('file', file)
     formData.append('email', email)
 
-    this.store
+    if (!extensionRegex.test(fileName)) {
+      document.querySelector(`input[data-testid="file"]`).value = ''
+      alert('Choisissez une image au format valide')      
+    } else {
+      this.store
       .bills()
       .create({
         data: formData,
-        headers: {
-          noContentType: true
-        }
+        headers: { noContentType: true }
       })
       .then(({fileUrl, key}) => {
         console.log(fileUrl)
         this.billId = key
         this.fileUrl = fileUrl
         this.fileName = fileName
-      }).catch(error => console.error(error))
+      })
+      .catch(error => console.error(error))
+    }
   }
-
+  
   handleSubmit = e => {
     e.preventDefault()
     console.log('e.target.querySelector(`input[data-testid="datepicker"]`).value', e.target.querySelector(`input[data-testid="datepicker"]`).value)
